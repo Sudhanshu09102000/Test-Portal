@@ -757,22 +757,24 @@
 
     /* ✅ RESIZABLE QUESTION CONTAINER */
     /* ✅ RESIZABLE QUESTION CONTAINER (HEIGHT + WIDTH) */
-    .resizable-question-box {
-      resize: both;
-      overflow: auto;
+   /* ✅ FIX: resizable box + image question never hides bottom buttons */
+.resizable-question-box {
+  resize: both;
+  overflow: hidden;  /* ✅ keep swipe animation safe */
+  position: relative;
 
-      display: inline-block;
-      /* ✅ MOST IMPORTANT */
-      width: 100%;
-      /* start full width */
-      max-width: 100vw;
-      /* allow wide resize */
+  display: flex;          /* ✅ important */
+  flex-direction: column; /* ✅ stack content + footer */
 
-      min-width: 320px;
-      min-height: 360px;
+  width: 100%;
+  max-width: 100vw;
 
-      max-height: 85vh;
-    }
+  min-width: 320px;
+  min-height: 360px;
+
+  max-height: 85vh; /* ✅ box stays inside screen */
+}
+
 
     #testInfoTop {
       max-width: 420px;
@@ -1098,6 +1100,20 @@
   transform: translateX(0px);
   opacity: 1;
 }
+/* ✅ ONLY question+options scroll, buttons always visible */
+.question-scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 6px; /* small scroll space */
+}
+
+/* ✅ if image is large, it will fit properly */
+#questionImage {
+  max-height: 40vh;
+  object-fit: contain;
+  width: 100%;
+  display: block;
+}
 
   </style>
 </head>
@@ -1208,31 +1224,32 @@
 
 
 
-              <div class="qbox mb-3">
-                <div id="questionText" class="fs-5 fw-semibold"></div>
+              <!-- ✅ SCROLLABLE CONTENT AREA -->
+<div class="question-scroll-area">
 
-                <div id="questionImageWrap" class="mt-2 d-none">
-                  <img id="questionImage" class="qimg" alt="question image" />
-                </div>
+  <div class="qbox mb-3">
+    <div id="questionText" class="fs-5 fw-semibold"></div>
 
-              </div>
-              <!-- Full sized help panel (opens on ? click in practice mode) -->
+    <div id="questionImageWrap" class="mt-2 d-none">
+      <img id="questionImage" class="qimg" alt="question image" />
+    </div>
+  </div>
 
+  <div id="optionsArea" class="d-grid gap-2"></div>
 
-              <div id="optionsArea" class="d-grid gap-2"></div>
+</div>
 
+<!-- ✅ FIXED FOOTER (always visible) -->
+<hr class="border-white border-opacity-10 my-3">
 
+<div class="d-flex flex-wrap gap-2">
+  <button id="prevBtn" class="btn btn-glass">◀ Previous </button>
+  <button id="saveNextBtn" class="btn btn-glass">Save & Next ▶</button>
+  <button id="reviewNextBtn" class="btn btn-glass">Mark for Review & Next</button>
+  <button id="clearBtn" class="btn btn-glass">Clear response</button>
+  <button id="showSummaryBtn" class="btn btn-glass d-none">Show summary</button>
+</div>
 
-              <hr class="border-white border-opacity-10 my-3">
-
-              <div class="d-flex flex-wrap gap-2">
-                <button id="prevBtn" class="btn btn-glass">◀ Previous </button>
-                <button id="saveNextBtn" class="btn btn-glass">Save & Next ▶</button>
-                <button id="reviewNextBtn" class="btn btn-glass">Mark for Review & Next</button>
-                <button id="clearBtn" class="btn btn-glass">Clear response</button>
-                <button id="showSummaryBtn" class="btn btn-glass d-none">Show summary</button>
-
-              </div>
                           <div class="top-toolbar ms-auto mobile-move-toolbar">
 <!-- ✅ Answer / Explanation (?) button (ONLY Practice Mode) -->
 <button id="qmarkBtn" class="btn btn-glass btn-sm" title="Answer & Explanation">
@@ -1869,6 +1886,11 @@ startTimer();
       if (q.image) {
         $('questionImageWrap').classList.remove('d-none');
         $('questionImage').src = q.image;
+        $('questionImage').onerror = () => {
+  console.error("❌ Question image not found:", q.image);
+  $('questionImageWrap').classList.add('d-none');
+};
+
       } else {
         $('questionImageWrap').classList.add('d-none');
         $('questionImage').removeAttribute('src');
