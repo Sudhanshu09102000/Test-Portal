@@ -763,11 +763,11 @@
    /* ✅ FIX: resizable box + image question never hides bottom buttons */
 .resizable-question-box {
   resize: both;
-  overflow: hidden;  /* ✅ keep swipe animation safe */
+  overflow: hidden;
   position: relative;
 
-  display: flex;          /* ✅ important */
-  flex-direction: column; /* ✅ stack content + footer */
+  display: flex;
+  flex-direction: column;
 
   width: 100%;
   max-width: 100vw;
@@ -775,8 +775,9 @@
   min-width: 320px;
   min-height: 360px;
 
-  max-height: 85vh; /* ✅ box stays inside screen */
+  max-height: none;   /* ✅ allow full vertical growth */
 }
+
 
 
     #testInfoTop {
@@ -1118,6 +1119,15 @@
   display: block;
 }
 
+
+.engine-shell {
+  min-height: auto !important;
+  align-items: stretch;
+}
+.engine-shell > div {
+  align-self: stretch;
+}
+
   </style>
 </head>
 
@@ -1316,7 +1326,7 @@
 
       <div class="timer-pill glass">
         <div class="d-flex align-items-center gap-2">
-          <div class="fw-semibold">Time</div>
+              <!-- <div class="fw-semibold">Time</div> -->
           <div id="timerText">00:00</div>
         </div>
       </div>
@@ -2421,7 +2431,7 @@ updateExamModeUI();
 
 
       if (fromTimer) {
-        alert('Time up! Test submitted.');
+        alert('Test submitted.');
       }
       showSummary(fromTimer);
 
@@ -3018,6 +3028,189 @@ $('summaryStats').innerHTML = `
     }
 
   </script>
+
+  <script>
+/* ============================================================
+   PRESS "P" → CAPTURE ALL QUESTIONS VIA goNext() → PPT
+   FINAL FIX (POST-SUBMIT SAFE)
+   ============================================================ */
+
+(function () {
+
+  /* ---------- LOAD LIBS ---------- */
+  const LIBS = [
+    "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js",
+    "https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"
+  ];
+
+  function loadScript(src) {
+    return new Promise((res, rej) => {
+      const s = document.createElement("script");
+      s.src = src;
+      s.onload = res;
+      s.onerror = rej;
+      document.head.appendChild(s);
+    });
+  }
+
+  async function ensureLibs() {
+    for (const src of LIBS) {
+      if (![...document.scripts].some(s => s.src.includes(src))) {
+        await loadScript(src);
+      }
+    }
+  }
+
+  /* ---------- HELPERS ---------- */
+  function getQuestionText() {
+    return document.getElementById("questionText")?.innerText.trim() || "";
+  }
+
+  function getQuestionNo() {
+    const txt = getQuestionText();
+    const m = txt.match(/Q\s*(\d+)\s*\/\s*(\d+)/i);
+    return m ? Number(m[1]) : null;
+  }
+
+  function waitForQuestionChange(prevText) {
+    return new Promise(resolve => {
+      let tries = 0;
+      const check = () => {
+        tries++;
+        const now = getQuestionText();
+        if (now && now !== prevText) {
+          resolve(true);
+        } else if (tries > 40) {
+          resolve(false); // stop waiting
+        } else {
+          setTimeout(check, 120);
+        }
+      };
+      check();
+    });
+  }
+
+  /* ---------- STORAGE ---------- */
+  const SHOTS = [];
+
+  /* ---------- SCREENSHOT ---------- */
+  async function captureScreen() {
+    const canvas = await html2canvas(document.documentElement, {
+      scale: 2,
+      backgroundColor: "#ffffff",
+      useCORS: true,
+      width: window.innerWidth,
+      height: window.innerHeight,
+      windowWidth: window.innerWidth,
+      windowHeight: window.innerHeight
+    });
+    SHOTS.push(canvas.toDataURL("image/png"));
+  }
+
+  /* ---------- PPT ---------- */
+  async function downloadPPT() {
+    const pptx = new PptxGenJS();
+    pptx.defineLayout({ name: "FULL", width: 13.33, height: 7.5 });
+    pptx.layout = "FULL";
+
+    SHOTS.forEach(img => {
+      const slide = pptx.addSlide();
+      slide.addImage({ data: img, x: 0, y: 0, w: "100%", h: "100%" });
+    });
+
+    await pptx.writeFile({ fileName: "mock-test-questions.pptx" });
+  }
+
+  /* ---------- MAIN LOGIC ---------- */
+  async function run() {
+    try {
+      await ensureLibs();
+
+      SHOTS.length = 0;
+
+      // ensure first question exists
+      let currentText = getQuestionText();
+      if (!currentText) {
+        alert("No question visible.");
+        return;
+      }
+
+      const visited = new Set();
+
+      while (true) {
+        const qNo = getQuestionNo();
+        if (visited.has(currentText)) break;
+
+        visited.add(currentText);
+        await captureScreen();
+
+        if (typeof goNext !== "function") break;
+
+        goNext();
+        const changed = await waitForQuestionChange(currentText);
+
+        if (!changed) break;
+        currentText = getQuestionText();
+      }
+
+      if (SHOTS.length > 0) {
+        await downloadPPT();
+      } else {
+        alert("No screenshots captured.");
+      }
+
+    } catch (e) {
+      console.error(e);
+      alert("Screenshot process failed.");
+    }
+  }
+
+  /* ---------- KEY BIND ---------- */
+  document.addEventListener("keydown", (e) => {
+    if (e.key.toLowerCase() === ".") {
+      e.preventDefault();
+      run();
+    }
+  });
+
+  console.log("✅ PRESS 'P' → CAPTURE ALL QUESTIONS (goNext based)");
+
+})();
+</script>
+<script>
+(() => {
+  const topBar = document.querySelector('.engine-topbar');
+  if (!topBar) return;
+
+  // initial hidden state
+  topBar.style.transition = 'height 0.25s ease, opacity 0.25s ease';
+  topBar.style.height = '0px';
+  topBar.style.opacity = '0';
+  topBar.style.overflow = 'hidden';
+
+  // hover zone (top 18px of screen)
+  const hoverZone = document.createElement('div');
+  hoverZone.style.position = 'fixed';
+  hoverZone.style.top = '0';
+  hoverZone.style.left = '0';
+  hoverZone.style.width = '100%';
+  hoverZone.style.height = '18px';
+  hoverZone.style.zIndex = '99999';
+  hoverZone.style.background = 'transparent';
+  document.body.appendChild(hoverZone);
+
+  hoverZone.addEventListener('mouseenter', () => {
+    topBar.style.height = '';
+    topBar.style.opacity = '1';
+  });
+
+  topBar.addEventListener('mouseleave', () => {
+    topBar.style.height = '0px';
+    topBar.style.opacity = '0';
+  });
+})();
+</script>
+
   <!-- Candidate Details Modal (Name + Time) -->
   <div class="modal fade" id="candidateModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
