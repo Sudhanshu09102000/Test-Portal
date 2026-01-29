@@ -1127,6 +1127,13 @@
 .engine-shell > div {
   align-self: stretch;
 }
+.timer-pill {
+  cursor: grab;
+}
+
+.timer-pill:active {
+  cursor: grabbing;
+}
 
   </style>
 </head>
@@ -3241,6 +3248,50 @@ $('summaryStats').innerHTML = `
   });
 })();
 </script> -->
+
+
+<script>
+(function () {
+  const box = document.querySelector('.timer-pill');
+  if (!box) return;
+
+  let isDragging = false;
+  let offsetX = 0;
+  let offsetY = 0;
+
+  box.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    offsetX = e.clientX - box.getBoundingClientRect().left;
+    offsetY = e.clientY - box.getBoundingClientRect().top;
+    box.style.transition = 'none';
+    box.style.zIndex = 99999;
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+
+    let x = e.clientX - offsetX;
+    let y = e.clientY - offsetY;
+
+    // keep inside viewport
+    const maxX = window.innerWidth - box.offsetWidth;
+    const maxY = window.innerHeight - box.offsetHeight;
+
+    x = Math.max(0, Math.min(x, maxX));
+    y = Math.max(0, Math.min(y, maxY));
+
+    box.style.left = x + 'px';
+    box.style.top = y + 'px';
+    box.style.right = 'auto';
+    box.style.bottom = 'auto';
+    box.style.position = 'fixed';
+  });
+
+  document.addEventListener('mouseup', () => {
+    isDragging = false;
+  });
+})();
+</script>
 
   
 
