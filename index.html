@@ -1401,6 +1401,37 @@
     </div>
   </div>
 
+  <!-- Candidate Details Modal (Name + Time) -->
+  <div class="modal fade" id="candidateModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content glass">
+        <div class="modal-header border-0">
+          <h5 class="modal-title">Start Test</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label subtle">Candidate name</label>
+            <input id="candNameInput" class="form-control" placeholder=" " />
+          </div><div class="top-toolbar ms-auto mobile-move-toolbar">
+
+
+          <div class="mb-1">
+            <label class="form-label subtle">Time required (in minutes)</label>
+            <input id="candTimeInput" type="number" min="1" class="form-control" placeholder=" " />
+            <div class="small subtle mt-2">If empty, auto time = 15 mins</div>
+          </div>
+        </div>
+
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-glass" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-success" id="startTestConfirmBtn">Start</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Audio -->
   <audio id="audCorrect" preload="auto">
     <source src="a.mp3" type="audio/mpeg">
@@ -1676,7 +1707,7 @@ $('prevBtn').onclick = goPrev;
       state.desiredTimeMin = details.timeMin; // store time for engine
 
 
-      $('testInfoTop').textContent = `${sel.subjectTitle} • ${sel.topicName} • ${sel.subtopicName}`;
+      $('testInfoTop').textContent = `${sel.topicName} • ${sel.subtopicName}`;
 
       // Reset globals expected from external scripts
       window.questions = undefined;
@@ -3177,7 +3208,7 @@ $('summaryStats').innerHTML = `
 
 })();
 </script>
-<script>
+<!-- <script>
 (() => {
   const topBar = document.querySelector('.engine-topbar');
   if (!topBar) return;
@@ -3209,38 +3240,9 @@ $('summaryStats').innerHTML = `
     topBar.style.opacity = '0';
   });
 })();
-</script>
+</script> -->
 
-  <!-- Candidate Details Modal (Name + Time) -->
-  <div class="modal fade" id="candidateModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content glass">
-        <div class="modal-header border-0">
-          <h5 class="modal-title">Start Test</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-
-        <div class="modal-body">
-          <div class="mb-3">
-            <label class="form-label subtle">Candidate name</label>
-            <input id="candNameInput" class="form-control" placeholder=" " />
-          </div><div class="top-toolbar ms-auto mobile-move-toolbar">
-
-
-          <div class="mb-1">
-            <label class="form-label subtle">Time required (in minutes)</label>
-            <input id="candTimeInput" type="number" min="1" class="form-control" placeholder=" " />
-            <div class="small subtle mt-2">If empty, auto time = 15 mins</div>
-          </div>
-        </div>
-
-        <div class="modal-footer border-0">
-          <button type="button" class="btn btn-glass" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-success" id="startTestConfirmBtn">Start</button>
-        </div>
-      </div>
-    </div>
-  </div>
+  
 
 </body>
 
