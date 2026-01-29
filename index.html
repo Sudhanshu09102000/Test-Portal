@@ -949,27 +949,34 @@
   padding: 14px 14px !important;  /* ✅ reduce side padding */
 }
 /* ✅ RIGHT SLIDE NAVIGATOR PANEL */
-.nav-panel{
+/* ✅ FIX: Navigator panel mobile-safe */
+.nav-panel {
   position: fixed;
-  top: 0;
+  top: env(safe-area-inset-top);
   right: 0;
-  height: 100vh;              /* ✅ full screen height */
-  width: min(360px, 92vw);    /* ✅ perfect for mobile + pc */
+  bottom: env(safe-area-inset-bottom);
+  height: auto;                 /* ❌ remove 100vh */
+  width: min(360px, 92vw);
   transform: translateX(110%);
   transition: transform .28s ease;
   z-index: 9999;
   padding: 10px;
+  overflow: hidden;             /* outer never scrolls */
 }
+
 
 .nav-panel.open{
   transform: translateX(0%);
 }
 
-/* inner glass full height */
-.nav-panel-inner{
-  height: calc(100vh - 20px);
+/* ✅ FIX: Mobile-safe full scroll */
+.nav-panel-inner {
+  height: 100%;
+  max-height: 100%;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
+
 
 /* ✅ Beautiful hamburger icon top-right */
 .nav-toggle-icon{
@@ -1133,6 +1140,13 @@
 
 .timer-pill:active {
   cursor: grabbing;
+}
+@media (max-width: 576px) {
+  .nav-panel {
+    top: 0;
+    bottom: 0;
+    height: 100svh;   /* ✅ REAL mobile viewport height */
+  }
 }
 
   </style>
